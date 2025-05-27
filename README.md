@@ -4,6 +4,7 @@
 
 [![Build & Test CI](https://github.com/Simon-Initiative/oli-torus/workflows/Package/badge.svg?branch=master)](https://github.com/Simon-Initiative/oli-torus/actions/workflows/package.yml)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/Simon-Initiative/authoring-client/blob/master/LICENSE)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/manelli/oli-torus)
 
 <a href="http://oli.cmu.edu" alt="Open Learning Initiative">
   <img height="50" src="https://oli.cmu.edu/wp-content/uploads/2018/10/oli-logo-78px-high-1.svg" />
