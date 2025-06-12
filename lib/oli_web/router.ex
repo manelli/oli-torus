@@ -46,7 +46,6 @@ defmodule OliWeb.Router do
     plug(:fetch_current_user)
     plug(:fetch_live_flash)
     plug(:put_root_layout, {OliWeb.LayoutView, :lti})
-    plug(:protect_from_forgery)
     plug(OliWeb.Plugs.SessionContext)
   end
 
@@ -376,7 +375,6 @@ defmodule OliWeb.Router do
 
     get("/api/v1/legacy_support", LegacySupportController, :index)
 
-    post("/help/create", HelpController, :create)
     post("/consent/cookie", CookieConsentController, :persist_cookies)
     get("/consent/cookie", CookieConsentController, :retrieve)
 
@@ -395,7 +393,7 @@ defmodule OliWeb.Router do
   scope "/.well-known", OliWeb do
     pipe_through([:api])
 
-    get("/jwks.json", LtiController, :jwks)
+    get("/jwks.json", Api.LtiController, :jwks)
   end
 
   # authorization protected routes
@@ -709,6 +707,7 @@ defmodule OliWeb.Router do
     pipe_through([:api, :require_section, :delivery_protected])
 
     put("/", SchedulingController, :update)
+    put("/agenda", SchedulingController, :update_agenda)
     get("/", SchedulingController, :index)
     delete("/", SchedulingController, :clear)
   end
@@ -840,7 +839,7 @@ defmodule OliWeb.Router do
     pipe_through([:api])
 
     # LTI platform services access tokens
-    post("/auth/token", LtiController, :auth_token)
+    post("/auth/token", Api.LtiController, :auth_token)
   end
 
   scope "/lti", OliWeb do
@@ -852,7 +851,7 @@ defmodule OliWeb.Router do
     post("/launch", LtiController, :launch)
     post("/test", LtiController, :test)
 
-    get("/developer_key.json", LtiController, :developer_key_json)
+    get("/developer_key.json", Api.LtiController, :developer_key_json)
 
     post("/register", LtiController, :request_registration)
 

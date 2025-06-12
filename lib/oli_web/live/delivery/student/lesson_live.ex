@@ -22,7 +22,7 @@ defmodule OliWeb.Delivery.Student.LessonLive do
   alias OliWeb.Delivery.Student.Lesson.Annotations
   alias OliWeb.Delivery.Student.Lesson.Components.OutlineComponent
   alias Oli.Delivery.{Hierarchy, Metrics, Sections, Settings}
-  alias Oli.Delivery.Sections.SectionCache
+  alias Oli.Delivery.Sections.SectionResourceDepot
   alias OliWeb.Delivery.Student.Lesson.Components.OneAtATimeQuestion
   alias OliWeb.Icons
 
@@ -34,8 +34,16 @@ defmodule OliWeb.Delivery.Student.LessonLive do
   # this is an optimization to reduce the memory footprint of the liveview process
   @required_keys_per_assign %{
     section:
-      {[:id, :slug, :title, :brand, :lti_1p3_deployment, :customizations, :open_and_free],
-       %Sections.Section{}},
+      {[
+         :id,
+         :slug,
+         :title,
+         :brand,
+         :lti_1p3_deployment,
+         :customizations,
+         :open_and_free,
+         :root_section_resource_id
+       ], %Sections.Section{}},
     current_user: {[:id, :name, :email, :sub], %User{}}
   }
 
@@ -48,7 +56,7 @@ defmodule OliWeb.Delivery.Student.LessonLive do
     if connected?(socket) do
       thin_hierarchy =
         socket.assigns.section
-        |> get_or_compute_full_hierarchy()
+        |> SectionResourceDepot.get_full_hierarchy(hidden: false)
         |> Hierarchy.thin_hierarchy(
           [
             "id",
@@ -1135,19 +1143,19 @@ defmodule OliWeb.Delivery.Student.LessonLive do
 
   attr :batch_scoring, :boolean, default: false
 
-  def submit_button(%{batch_scoring: false} = assigns) do
-    ~H"""
-    """
-  end
-
   def submit_button(assigns) do
+    button_style =
+      if assigns[:batch_scoring] do
+        "cursor-pointer px-5 py-2.5 hover:bg-opacity-40 bg-blue-600 rounded-[3px] shadow justify-center items-center gap-2.5 inline-flex text-white text-sm font-normal font-['Open Sans'] leading-tight"
+      else
+        "invisible"
+      end
+
+    assigns = assign(assigns, button_style: button_style)
+
     ~H"""
     <div class="flex w-full justify-center">
-      <button
-        id="submit_answers"
-        phx-hook="DelayedSubmit"
-        class="cursor-pointer px-5 py-2.5 hover:bg-opacity-40 bg-blue-600 rounded-[3px] shadow justify-center items-center gap-2.5 inline-flex text-white text-sm font-normal font-['Open Sans'] leading-tight"
-      >
+      <button id="submit_answers" phx-hook="DelayedSubmit" class={@button_style}>
         <span class="button-text">Submit Answers</span>
         <span class="spinner hidden ml-2 animate-spin">
           <svg
@@ -1750,12 +1758,6 @@ defmodule OliWeb.Delivery.Student.LessonLive do
       view when view not in ~w(gallery outline) -> @default_selected_view
       view -> String.to_existing_atom(view)
     end
-  end
-
-  defp get_or_compute_full_hierarchy(section) do
-    SectionCache.get_or_compute(section.slug, :full_hierarchy, fn ->
-      Hierarchy.full_hierarchy(section)
-    end)
   end
 
   defp possibly_fire_page_trigger(section, page) do
